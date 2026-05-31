@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-mode">
+
+    <!-- Tela de Login -->
+    <div id="login-screen" class="auth-screen">
+        <div class="auth-card">
+            <div class="logo">
+                <i class="fas fa-cube"></i>
+                <span>Gestão</span>
+            </div>
+            <h2>Bem-vindo de volta</h2>
+            <p>Faça login para acessar o sistema</p>
+            <form id="form-login">
+                <div class="form-group">
+                    <label>Usuário</label>
+                    <input type="text" id="login-username" required placeholder="Digite seu usuário">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="login-password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-submit">Entrar</button>
+            </form>
+            <div id="login-error" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- Interface Principal -->
+    <div id="main-app" style="display: none;">
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-cube"></i>
+                <span>Gestão</span>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-target="clientes-section">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </li>
+                <li data-target="produtos-section">
+                    <i class="fas fa-box"></i>
+                    <span>Produtos</span>
+                </li>
+                <li data-target="pedidos-section">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Pedidos</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="btn-theme-toggle" class="btn-icon-large" title="Alternar tema">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="btn-logout" class="btn-icon-large" title="Sair">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </nav>
+
+        <main class="content">
+            <header>
+                <h1 id="section-title">Clientes</h1>
+                <button id="btn-add" class="btn-primary">
+                    <i class="fas fa-plus"></i> Novo Registro
+                </button>
+            </header>
+
+            <section id="clientes-section" class="data-section active">
+                <div class="table-container">
+                    <div class="table-scroll">
+                        <table id="table-clientes">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Telefone</th>
+                                    <th>Cidade</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="produtos-section" class="data-section">
+                <div class="table-container">
+                    <div class="table-scroll">
+                        <table id="table-produtos">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Preço</th>
+                                    <th>Estoque</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pedidos-section" class="data-section">
+                <div class="table-container">
+                    <div class="table-scroll">
+                        <table id="table-pedidos">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Data</th>
+                                    <th>Cliente</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal: Cliente -->
+    <div id="modal-cliente" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-cliente-title">Novo Cliente</h2>
+                <button class="close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-cliente">
+                    <input type="hidden" id="cliente-id">
+                    <div class="form-group">
+                        <label>Nome completo</label>
+                        <input type="text" id="nome" required placeholder="Ex: João Silva">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="email" required placeholder="email@exemplo.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone</label>
+                            <input type="text" id="telefone" required placeholder="(11) 99999-9999">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Rua / Endereço</label>
+                        <input type="text" id="rua" required placeholder="Rua das Flores, 123">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cidade</label>
+                            <input type="text" id="cidade" required placeholder="São Paulo">
+                        </div>
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <input type="text" id="estado" required placeholder="SP">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">Salvar Cliente</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Produto -->
+    <div id="modal-produto" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-produto-title">Novo Produto</h2>
+                <button class="close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-produto">
+                    <input type="hidden" id="produto-id">
+                    <div class="form-group">
+                        <label>Nome do produto</label>
+                        <input type="text" id="prod-nome" required placeholder="Ex: Camiseta Branca M">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Preço (R$)</label>
+                            <input type="number" id="prod-preco" step="0.01" min="0" required placeholder="0,00">
+                        </div>
+                        <div class="form-group">
+                            <label>Estoque (unid.)</label>
+                            <input type="number" id="prod-estoque" min="0" required placeholder="0">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">Salvar Produto</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Pedido -->
+    <div id="modal-pedido" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Novo Pedido</h2>
+                <button class="close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-pedido">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <select id="pedido-cliente" required></select>
+                    </div>
+                    <div id="itens-container">
+                        <label>Itens do pedido</label>
+                    </div>
+                    <div class="items-footer">
+                        <button type="button" id="btn-add-item" class="btn-secondary">
+                            <i class="fas fa-plus"></i> Adicionar item
+                        </button>
+                    </div>
+                    <button type="submit" class="btn-submit">Finalizar Pedido</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalhes do Pedido -->
+    <div id="modal-pedido-detalhes" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detalhes do Pedido</h2>
+                <button class="close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="detalhes-pedido-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
