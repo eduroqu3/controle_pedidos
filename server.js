@@ -207,21 +207,69 @@ app.delete('/api/produtos/:id', verificarToken, (req, res) => {
 // Pedidos
 app.post('/api/pedidos', verificarToken, (req, res) => {
     const { cliente_id, itens } = req.body;
+
     conexao.beginTransaction(erro => {
         if (erro) return res.status(500).json({ erro: erro.message });
-        conexao.query('INSERT INTO pedidos (cliente_id) VALUES (?)', [cliente_id], (erro, resultado) => {
-            if (erro) return conexao.rollback(() => res.status(500).json({ erro: erro.message }));
-            const pedidoId = resultado.insertId;
-            let count = 0;
-            itens.forEach(item => {
-                conexao.query('SELECT preco FROM produtos WHERE id = ?', [item.produto_id], (e, r) => {
-                    conexao.query('INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
-                    [pedidoId, item.produto_id, item.quantidade, r[0].preco], (e2) => {
-                        count++;
-                        if (count === itens.length) {
-                            conexao.commit(() => res.status(201).json({ mensagem: 'Pedido criado' }));
+
+        // 1. Busca preco e estoque atual de cada produto e valida quantidade
+        const ids = itens.map(i => i.produto_id);
+        conexao.query('SELECT id, preco, estoque, nome FROM produtos WHERE id IN (?)', [ids], (e, produtos) => {
+            if (e) return conexao.rollback(() => res.status(500).json({ erro: e.message }));
+
+            // Monta mapa para lookup rápido
+            const mapa = {};
+            produtos.forEach(p => { mapa[p.id] = p; });
+
+            // Valida estoque de todos os itens antes de qualquer inserção
+            for (const item of itens) {
+                const prod = mapa[item.produto_id];
+                if (!prod) {
+                    return conexao.rollback(() =>
+                        res.status(400).json({ erro: `Produto ID ${item.produto_id} não encontrado.` })
+                    );
+                }
+                if (parseInt(item.quantidade) > prod.estoque) {
+                    return conexao.rollback(() =>
+                        res.status(400).json({
+                            erro: `Estoque insuficiente para "${prod.nome}". Disponível: ${prod.estoque}, solicitado: ${item.quantidade}.`
+                        })
+                    );
+                }
+            }
+
+            // 2. Cria o pedido
+            conexao.query('INSERT INTO pedidos (cliente_id) VALUES (?)', [cliente_id], (erro, resultado) => {
+                if (erro) return conexao.rollback(() => res.status(500).json({ erro: erro.message }));
+                const pedidoId = resultado.insertId;
+                let count = 0;
+
+                itens.forEach(item => {
+                    const prod = mapa[item.produto_id];
+
+                    // 3. Insere item do pedido
+                    conexao.query(
+                        'INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
+                        [pedidoId, item.produto_id, item.quantidade, prod.preco],
+                        (e2) => {
+                            if (e2) return conexao.rollback(() => res.status(500).json({ erro: e2.message }));
+
+                            // 4. Desconta do estoque
+                            conexao.query(
+                                'UPDATE produtos SET estoque = estoque - ? WHERE id = ?',
+                                [item.quantidade, item.produto_id],
+                                (e3) => {
+                                    if (e3) return conexao.rollback(() => res.status(500).json({ erro: e3.message }));
+                                    count++;
+                                    if (count === itens.length) {
+                                        conexao.commit(errC => {
+                                            if (errC) return conexao.rollback(() => res.status(500).json({ erro: errC.message }));
+                                            res.status(201).json({ mensagem: 'Pedido criado' });
+                                        });
+                                    }
+                                }
+                            );
                         }
-                    });
+                    );
                 });
             });
         });
@@ -248,7 +296,7 @@ app.get('/api/pedidos/:id', verificarToken, (req, res) => {
 });
 
 app.patch('/api/pedidos/:id/status', verificarToken, (req, res) => {
-    const statusPermitidos = ['Pendente', 'Entregue'];
+    const statusPermitidos = ['Pendente', 'Concluído'];
     if (!statusPermitidos.includes(req.body.status)) {
         return res.status(400).json({ erro: 'Status inválido' });
     }

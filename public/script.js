@@ -244,7 +244,7 @@ async function loadPedidos() {
 }
 
 window.toggleStatus = async (id, currentStatus) => {
-    const newStatus = currentStatus === 'Pendente' ? 'Entregue' : 'Pendente';
+    const newStatus = currentStatus === 'Pendente' ? 'Concluído' : 'Pendente';
     await apiFetch(`/pedidos/${id}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus })
@@ -336,13 +336,19 @@ document.getElementById('form-pedido').onsubmit = async (e) => {
         produto_id: row.querySelector('.item-produto').value,
         quantidade: row.querySelector('.item-quantidade').value
     }));
-    await apiFetch('/pedidos', {
+    const res = await fetch(`${API_URL}/pedidos`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
             cliente_id: document.getElementById('pedido-cliente').value,
             itens
         })
     });
+    const result = await res.json();
+    if (!res.ok) {
+        showToast('Erro: ' + result.erro);
+        return;
+    }
     document.getElementById('modal-pedido').style.display = 'none';
     showToast('Pedido realizado!');
     loadPedidos();
