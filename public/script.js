@@ -228,6 +228,10 @@ window.deleteProduto = async (id) => {
 async function loadPedidos() {
     const data = await apiFetch('/pedidos');
     if (!data) return;
+    data.sort((a, b) => {
+        const ordem = { 'Pendente': 0, 'Concluído': 1 };
+        return ordem[a.status] - ordem[b.status];
+    });
     const tbody = document.querySelector('#table-pedidos tbody');
     tbody.innerHTML = data.map(p => `
         <tr>
